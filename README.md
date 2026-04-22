@@ -86,7 +86,7 @@ python main.py --no-debug
 - **Field size:** ~3× car width wide, ~5× car length long is a good starting point.
 - **Camera mount:** A cheap tripod or a 2×4 arm clamped to the arena wall works.
   Mount high enough that the full field is visible with some margin.
-- **Ball:** Orange ping pong ball — easy HSV isolation under most lighting.
+- **Ball:** Neon green wiffle ball — easy HSV isolation under most lighting.
 
 ## Troubleshooting
 
