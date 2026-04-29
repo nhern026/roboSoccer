@@ -5,20 +5,20 @@ from typing import Optional, Tuple
 
 
 # --- Ball HSV — tune with hsv_calibrate.py ---
+# FOR BALL!
 HSV_LOWER = np.array([25, 145, 121])
 HSV_UPPER = np.array([56, 255, 255])
 
-# --- Red car (left team) — red wraps in HSV so two ranges are needed ---
+# --- Red car (left team) ---
 # Tune with hsv_calibrate.py pointed at your red car
-CAR_LEFT_HSV_LOWER1 = np.array([0,   120, 60])
-CAR_LEFT_HSV_UPPER1 = np.array([10,  255, 255])
-CAR_LEFT_HSV_LOWER2 = np.array([170, 120, 60])
-CAR_LEFT_HSV_UPPER2 = np.array([180, 255, 255])
+CAR_LEFT_HSV_LOWER = np.array([152, 151, 104])
+CAR_LEFT_HSV_UPPER = np.array([226, 255, 255])
+
 
 # --- Blue car (right team) ---
 # Tune with hsv_calibrate.py pointed at your blue car
-CAR_RIGHT_HSV_LOWER = np.array([100, 120, 60])
-CAR_RIGHT_HSV_UPPER = np.array([130, 255, 255])
+CAR_RIGHT_HSV_LOWER = np.array([72, 151, 104])
+CAR_RIGHT_HSV_UPPER = np.array([104, 255, 255])
 
 MIN_BALL_AREA    = 300    # pixels²
 MIN_CIRCULARITY  = 0.65
@@ -70,8 +70,7 @@ class CVPipeline:
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
         ball      = self._detect_ball(hsv)
-        car_left  = self._detect_car(hsv, CAR_LEFT_HSV_LOWER1,  CAR_LEFT_HSV_UPPER1,
-                                          CAR_LEFT_HSV_LOWER2,  CAR_LEFT_HSV_UPPER2)
+        car_left  = self._detect_car(hsv, CAR_LEFT_HSV_LOWER, CAR_LEFT_HSV_UPPER)
         car_right = self._detect_car(hsv, CAR_RIGHT_HSV_LOWER, CAR_RIGHT_HSV_UPPER)
 
         goal_left = False
@@ -190,14 +189,14 @@ class CVPipeline:
 
         # Goal zones
         gl = self.goal_left
-        cv2.rectangle(frame, (gl["x1"], gl["y1"]), (gl["x2"], gl["y2"]), (255, 0, 0), 2)
+        cv2.rectangle(frame, (gl["x1"], gl["y1"]), (gl["x2"], gl["y2"]), (0, 0, 255), 2)
         cv2.putText(frame, "GOAL L", (gl["x1"], gl["y1"] - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
         gr = self.goal_right
-        cv2.rectangle(frame, (gr["x1"], gr["y1"]), (gr["x2"], gr["y2"]), (0, 0, 255), 2)
+        cv2.rectangle(frame, (gr["x1"], gr["y1"]), (gr["x2"], gr["y2"]), (255, 0, 0), 2)
         cv2.putText(frame, "GOAL R", (gr["x1"], gr["y1"] - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
         # Ball
         if ball.detected and ball.centroid is not None:

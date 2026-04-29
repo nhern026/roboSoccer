@@ -34,14 +34,14 @@ from commentary import Commentary
 #      position to the terminal — useful for picking coordinates.
 # -----------------------------------------------------------------------
 
-GOAL_LEFT  = {"x1": 66,  "y1": 173, "x2": 114, "y2": 265}
-GOAL_RIGHT = {"x1": 569, "y1": 171, "x2": 612, "y2": 246}
+GOAL_LEFT  = {"x1": 28, "y1": 172, "x2": 80,  "y2": 263}
+GOAL_RIGHT = {"x1": 584, "y1": 178, "x2": 628, "y2": 268}
 
 FIELD_POLY = np.array([
-    [109, 57],
-    [560, 59],
-    [589, 372],
-    [102, 388],
+    [ 97,  54],
+    [572,  64],
+    [605, 402],
+    [ 51, 408],
 ], dtype=np.int32)
 
 CAMERA_INDEX = 0
@@ -100,10 +100,8 @@ def main():
                     pipeline.reset_goal_counters()
                 elif event.key == pygame.K_c:
                     mx, my = pygame.mouse.get_pos()
-                    # Debug feed is drawn at (SCREEN_W-290, 10), scaled to 280px wide
-                    scale = 280 / 640
-                    cam_x = int((mx - (1280 - 290)) / scale)
-                    cam_y = int((my - 10) / scale)
+                    cam_x = int(mx / (1280 / 640))
+                    cam_y = int(my / (720 / 480))
                     print(f"camera pixel: ({cam_x}, {cam_y})")
 
         # --- CV frame ---

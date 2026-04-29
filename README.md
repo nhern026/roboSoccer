@@ -4,6 +4,56 @@
 A laptop with an overhead USB webcam handles all game logic, computer vision,
 scoring, and optional AI commentary.
 
+## System Architecture
+
+RoboSoccer is split across three layers — physical space, hardware, and software — that each talk to the next.
+
+### Physical space
+
+The arena is a walled rectangular field sitting flat on the floor. Two goal openings are cut into opposite ends. A camera is mounted overhead, looking straight down, so the entire field fits within the frame. Consistent, even lighting matters: the CV pipeline identifies objects purely by color, so shadows or glare directly affect detection quality.
+
+### Hardware
+
+| Component | Role |
+|-----------|------|
+| Robot cars (×2) | Players control these via Bluetooth controllers. Each car is marked with a distinct color (red / blue) so the CV pipeline can tell them apart. |
+| Overhead USB webcam | The single source of truth for everything happening on the field. Captures at 640×480. |
+| Laptop | Runs all software. Connects to the webcam over USB and outputs to a display showing the scoreboard. |
+| Display / projector | Shows the Pygame scoreboard window — camera feed as the background, score bar overlaid at the bottom. |
+| Speakers | Play goal SFX, whistle sounds, crowd ambiance, and AI commentary audio. |
+
+### Software
+
+All software runs in a single Python process started by `main.py`. Each component is a module with a clear responsibility:
+
+```
+main.py  (main loop @ ~60 fps)
+│
+├── CVPipeline          reads camera frames → detects ball + cars → signals goals
+│     └── OpenCV        GaussianBlur, HSV masking, morphology, contour analysis
+│
+├── GameState           pure state machine — tracks score, phase, and clock
+│
+├── Scoreboard          Pygame window — renders camera feed + HUD + sounds
+│
+└── Commentary          fires async on game events → Claude Haiku API → macOS `say`
+```
+
+**Per-frame data flow:**
+
+1. `main.py` reads a raw BGR frame from the webcam.
+2. `CVPipeline.process()` returns the ball position, both car positions, and two goal-scored flags.
+3. `GameState.tick()` advances the clock and transitions phases (kickoff → live → goal → kickoff…).
+4. If a goal flag is set, `GameState.goal_scored()` updates the score and starts the post-goal freeze.
+5. `Commentary.maybe_announce()` checks a cooldown timer; if enough time has passed it fires a background thread that calls the Claude API and pipes the response to TTS.
+6. `Scoreboard.update()` blits the annotated camera frame full-screen, draws the score bar, and plays any sound triggered by a phase change.
+
+### How the physical space maps to pixel space
+
+The camera sees the field as a trapezoid (perspective distortion from the mount angle). `FIELD_POLY` in `main.py` traces the inner boundary of the arena walls in camera pixel coordinates. `GOAL_LEFT` and `GOAL_RIGHT` are bounding boxes covering each goal mouth. All CV detection happens directly in raw pixel space — there is no perspective correction applied. Goal detection is a simple point-in-bounding-box test: if the ball centroid lands inside a goal rect for `CONFIRM_FRAMES` consecutive frames, a goal is registered.
+
+To find pixel coordinates for calibration, run the game and press `C` while hovering over the camera feed — it prints the corresponding camera pixel to the terminal.
+
 ## Setup
 
 ### 1. Install dependencies
