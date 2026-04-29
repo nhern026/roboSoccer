@@ -34,14 +34,14 @@ from commentary import Commentary
 #      position to the terminal — useful for picking coordinates.
 # -----------------------------------------------------------------------
 
-GOAL_LEFT = {"x1": 0, "y1": 220, "x2": 60, "y2": 420}
-GOAL_RIGHT = {"x1": 580, "y1": 220, "x2": 640, "y2": 420}
+GOAL_LEFT  = {"x1": 66,  "y1": 173, "x2": 114, "y2": 265}
+GOAL_RIGHT = {"x1": 569, "y1": 171, "x2": 612, "y2": 246}
 
 FIELD_POLY = np.array([
-    [60,  20],
-    [580, 20],
-    [580, 620],
-    [60,  620],
+    [109, 57],
+    [560, 59],
+    [589, 372],
+    [102, 388],
 ], dtype=np.int32)
 
 CAMERA_INDEX = 0
@@ -78,6 +78,8 @@ def main():
     print("  R      — reset to waiting screen")
     print("  Q/ESC  — quit")
 
+    pending_goal_state = None   # queued commentary fired at kickoff, not at goal
+
     while True:
         # --- Keyboard input (pygame) ---
         for event in pygame.event.get():
@@ -109,26 +111,40 @@ def main():
         if not ret:
             continue
 
-        ball, goal_left, goal_right, debug_frame = pipeline.process(frame)
+        ball, car_left, car_right, goal_left, goal_right, debug_frame = pipeline.process(frame)
+
+        def _build_state():
+            state = gs.summary_dict()
+            if ball.detected and ball.centroid:
+                state["ball_x"], state["ball_y"] = ball.centroid
+            if car_left.detected and car_left.centroid:
+                state["red_car_x"], state["red_car_y"] = car_left.centroid
+            if car_right.detected and car_right.centroid:
+                state["blue_car_x"], state["blue_car_y"] = car_right.centroid
+            return state
 
         # --- Goal events ---
+        prev_phase = gs.phase
         if gs.phase == Phase.LIVE:
             if goal_left:
                 gs.goal_scored(1)   # ball entered left goal → right team scores
                 if commentary:
-                    commentary.announce(gs.summary_dict())
+                    pending_goal_state = _build_state()
             elif goal_right:
                 gs.goal_scored(0)   # ball entered right goal → left team scores
                 if commentary:
-                    commentary.announce(gs.summary_dict())
+                    pending_goal_state = _build_state()
             elif commentary:
-                state = gs.summary_dict()
-                if ball.detected and ball.centroid:
-                    state["ball_x"], state["ball_y"] = ball.centroid
-                commentary.maybe_announce(state)
+                commentary.maybe_announce(_build_state())
 
         # --- Tick game clock ---
         gs.tick()
+
+        # Fire queued goal commentary once the reset period ends and kickoff begins
+        if prev_phase == Phase.GOAL and gs.phase == Phase.KICKOFF:
+            if commentary and pending_goal_state:
+                commentary.announce(pending_goal_state)
+                pending_goal_state = None
 
         # --- Scoreboard ---
         scoreboard.update(gs, debug_frame if show_debug else None)

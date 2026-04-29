@@ -14,8 +14,8 @@ class Phase(Enum):
 
 
 KICKOFF_DURATION = 3.0    # seconds of countdown
-GOAL_FREEZE = 3.0         # seconds to pause after a goal
-HALF_DURATION = 120.0     # seconds per half (2 minutes)
+GOAL_FREEZE = 10.0         # seconds to pause after a goal (time to reset ball)
+HALF_DURATION = 240.0     # seconds per half (4 minutes)
 NUM_HALVES = 2
 
 
