@@ -77,6 +77,21 @@ python main.py --no-debug
 | `commentary.py` | Claude API commentary + text-to-speech |
 | `hsv_calibrate.py` | Standalone HSV tuning tool |
 
+## How ball detection works
+
+Each camera frame goes through this pipeline in [`cv_pipeline.py`](cv_pipeline.py):
+
+1. **Gaussian blur** — smooths the frame to reduce pixel-level noise before color analysis.
+2. **BGR → HSV conversion** — HSV is used instead of RGB because hue is a single channel representing color, making detection much less sensitive to lighting changes.
+3. **Binary masking** — `cv2.inRange` produces a black-and-white mask: white where pixels fall within the ball's configured HSV range, black everywhere else.
+4. **Morphological cleanup** — `MORPH_OPEN` (erode then dilate) removes small noise blobs; `MORPH_DILATE` fills gaps in the ball's shape so it reads as one solid contour.
+5. **Contour selection** — OpenCV finds all white islands in the cleaned mask. Each is tested against two thresholds:
+   - Area ≥ `MIN_BALL_AREA` (300 px²) — rejects tiny dots
+   - Circularity ≥ `MIN_CIRCULARITY` (0.65) using `4π·area / perimeter²` — rejects non-round shapes (a perfect circle scores 1.0)
+
+   The largest surviving contour is chosen as the ball.
+6. **Centroid + radius** — the centroid is computed via image moments (`m10/m00`, `m01/m00`); the enclosing circle radius is found with `minEnclosingCircle` and used only for drawing the overlay on the debug feed.
+
 ## Arena build tips
 
 - **Walls:** 2×4 or 2×6 lumber screwed into a rectangular frame flat on the floor.
