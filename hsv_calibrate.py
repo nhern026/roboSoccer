@@ -43,8 +43,8 @@ def main(cam_index: int = 0):
         if not ret:
             break
 
-        blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        blurred = cv2.GaussianBlur(frame, (11, 11), 0) # gaussian blurring takes place to reduce noise and smooth the image, which can help improve the accuracy of color detection in the subsequent steps. The kernel size (11, 11) determines the amount of blurring applied to the image.
+        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV) # converts the blurred image from BGR to HSV
 
         h_lo = cv2.getTrackbarPos("H Low",  "HSV Calibrate")
         h_hi = cv2.getTrackbarPos("H High", "HSV Calibrate")
@@ -55,7 +55,7 @@ def main(cam_index: int = 0):
 
         lower = np.array([h_lo, s_lo, v_lo])
         upper = np.array([h_hi, s_hi, v_hi])
-        mask = cv2.inRange(hsv, lower, upper)
+        mask = cv2.inRange(hsv, lower, upper) # creates binary mask where white pixels represent areas within the HSV range 
 
         cv2.imshow("HSV Calibrate", frame)
         cv2.imshow("Mask", mask)

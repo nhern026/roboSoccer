@@ -147,7 +147,8 @@ def main():
                 pending_goal_state = None
 
         # --- Scoreboard ---
-        scoreboard.update(gs, debug_frame if show_debug else None)
+        # debug_frame has CV overlays (ball, cars, goals); raw frame if --no-debug
+        scoreboard.update(gs, debug_frame if show_debug else frame)
 
 
 def _quit(cap, scoreboard):

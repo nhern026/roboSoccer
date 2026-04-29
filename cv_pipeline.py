@@ -110,14 +110,15 @@ class CVPipeline:
     # ------------------------------------------------------------------
 
     def _detect_ball(self, hsv: np.ndarray) -> BallState:
-        mask = cv2.inRange(hsv, HSV_LOWER, HSV_UPPER)
+        mask = cv2.inRange(hsv, HSV_LOWER, HSV_UPPER) # binary masking to isolate pixels in the HSV range defined for the ball
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,   kernel, iterations=2)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel, iterations=1)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7)) 
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,   kernel, iterations=2) # removes small noise blobs
+        mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel, iterations=1) # fills in gaps in detected areas to help contour detection
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # finds contours in the mask (i.e. connected components of white pixels)
 
+        # this is the logic to determine which contour is the ball based on area and circularity
         best = None
         best_area = 0
         for cnt in contours:
@@ -137,6 +138,7 @@ class CVPipeline:
         if best is None:
             return BallState(detected=False, centroid=None, radius=0.0)
 
+        # compute smallest enclosing circle and centroid for the best contour
         _, radius = cv2.minEnclosingCircle(best)
         M = cv2.moments(best)
         cx = int(M["m10"] / M["m00"])

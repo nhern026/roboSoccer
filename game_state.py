@@ -13,9 +13,9 @@ class Phase(Enum):
     GAME_OVER = auto()     # Match finished
 
 
-KICKOFF_DURATION = 3.0    # seconds of countdown
+KICKOFF_DURATION = 10.0    # seconds of countdown
 GOAL_FREEZE = 10.0         # seconds to pause after a goal (time to reset ball)
-HALF_DURATION = 240.0     # seconds per half (4 minutes)
+HALF_DURATION = 180.0     # seconds per half (3 minutes)
 NUM_HALVES = 2
 
 
